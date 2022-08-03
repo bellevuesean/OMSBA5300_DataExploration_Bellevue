@@ -1,0 +1,88 @@
+---
+title: "Data Exploration Project"
+author: "Sean Bellevue"
+date: "8/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(readr)
+library(readxl)
+
+```
+
+#Pull the data 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+id_name_link <- read_csv("Rawdata/id_name_link.csv")
+Scorecard <- read_csv("Rawdata/Most+Recent+Cohorts+(Scorecard+Elements).csv")
+trends_1 <- read_csv("Rawdata/trends_up_to_finish.csv")
+trends_2 <- read_csv("Rawdata/trends_up_to_inter_1.csv")
+trends_3 <- read_csv("Rawdata/trends_up_to_inter_2.csv")
+trends_4 <- read_csv("Rawdata/trends_up_to_inter_3.csv")
+trends_5 <- read_csv("Rawdata/trends_up_to_inter_4.csv")
+trends_6 <- read_csv("Rawdata/trends_up_to_inter_5.csv")
+trends_7 <- read_csv("Rawdata/trends_up_to_inter_6.csv")
+trends_8 <- read_csv("Rawdata/trends_up_to_UM.csv")
+trends_9 <- read_csv("Rawdata/trends_up_to_UPhoenix.csv")
+trends_10 <- read_csv("Rawdata/trends_up_to_UT.csv")
+trends_11 <- read_csv("Rawdata/trends_up_to_UTMB.csv")
+trends_12 <- read_csv("Rawdata/trends_up_to_Yorktowne.csv")
+
+```
+
+#Merge togther all of the trend files to clean them all at once
+```{r}
+Trends <- rbind(trends_1
+                , trends_2
+                , trends_3
+                , trends_4
+                , trends_5
+                , trends_6
+                , trends_7
+                , trends_8
+                , trends_9
+                , trends_10
+                , trends_11
+                , trends_12
+                )
+
+summary(Trends)
+```
+
+#Remove any row with a null value, with incomplete data we can't compare or view trends as easily
+```{r}
+
+Trends <- Trends %>% 
+  na.omit()
+
+summary(Trends)
+```
+
+#Take the Monthorweek column and separate it into year, month , day - year2, month2, day2 columns. Then convert to M-YY for the starting date to better summarise the data to one month per college (schname) by sum of index [assuming that index is a snapshot value and not a trend so summing the values will still provide the same comparison of increase or decreased interest between time periods].
+
+```{r}
+
+Trends_mo <- Trends %>% 
+  mutate(Y = substr(monthorweek,1,4)) %>% 
+  mutate(M = substr(monthorweek,6,7)) %>% 
+  mutate(M_YYYY = paste0(M, sep = '-', Y)) %>% 
+  select(1,2,6,9)
+
+Trends_mo <- Trends_mo %>% 
+  group_by(schid, schname, M_YYYY) %>% 
+  summarise(Ind_sum = sum(index))
+
+```
+
+#Remove duplicate schname from the id_name_link data to remove duplicate school names for later merging ease
+
+```{r}
+
+unique_schname <- id_name_link %>%
+  group_by(schname) %>% 
+  filter(n() == 1)
+
+```
