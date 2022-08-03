@@ -1,2 +1,2 @@
-# OMSBA5300_DataTranslation_Bellevue
-Seattle U OMSBA 5300 data translation project
+# OMSBA5300_DataExploration_Bellevue
+Seattle U OMSBA 5300 data exploration project
