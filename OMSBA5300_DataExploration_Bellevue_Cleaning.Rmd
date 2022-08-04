@@ -11,6 +11,7 @@ library(tidyverse)
 library(readr)
 library(readxl)
 library(fixest)
+library(plotly)
 
 ```
 
@@ -134,6 +135,20 @@ final_df$M_YYYY <- as.Date(paste0(substr(final_df$M_YYYY,1,2), sep = '/', '01', 
 final_df <- final_df %>% 
   mutate(norm_ind = (Ind_sum - mean(Ind_sum))/sd(Ind_sum))
 
+final_df <- final_df %>% 
+  mutate(Timing = case_when(M_YYYY < '2015-09-01' ~ 'Pre',
+                            M_YYYY >= '2015-09-01'~ 'Post')) %>% 
+  mutate(High = case_when(Income_Bracket == 'High' ~ 1,
+                          TRUE ~ 0)) %>% 
+  mutate(Mid = case_when(Income_Bracket == 'Mid' ~ 1,
+                          TRUE ~ 0)) %>% 
+  mutate(Low = case_when(Income_Bracket == 'Low' ~ 1,
+                          TRUE ~ 0)) %>% 
+  mutate(Pre = case_when(M_YYYY < '2015-09-01' ~ 1,
+                         TRUE ~ 0)) %>% 
+  mutate(Post = case_when(M_YYYY > '2015-09-01' ~ 1,
+                         TRUE ~ 0))
+
 ```
 
 #Sperating out pre-scorecard dates and post-scorecard dates to compare the changes in index values between them.
@@ -149,20 +164,30 @@ final_df_post_sc <- final_df %>%
 ```
 
 ```{r}
-m1 <- feols(norm_ind ~ Income_Bracket + M_YYYY, data = final_df_pre_sc)
-m2 <- feols(norm_ind ~ Income_Bracket + M_YYYY, data = final_df_post_sc)
+m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
+m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
+m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket*Timing, data = final_df)
 
 etable(m1, m2)
+etable(m3)
 
 
-
-ggplot(final_df_pre_sc, aes(y = norm_ind, color = Income_Bracket)) +
+ggplot(final_df, aes(y = norm_ind, x = Income_Bracket, color = Timing)) +
   geom_boxplot()
 
 ggplot(final_df_post_sc, aes(y = norm_ind, color = Income_Bracket)) +
   geom_boxplot()
 
-wald(m1)
+wald(m1, c("High", "Low"))
+wald(m2, c("High", "Low"))
 ```
 
 
+
+
+```{r}
+
+
+
+
+```
