@@ -149,16 +149,20 @@ final_df_post_sc <- final_df %>%
 ```
 
 ```{r}
-m1 <- feols(norm_ind ~ Income_Bracket | M_YYYY, data = final_df_pre_sc)
-m2 <- feols(norm_ind ~ Income_Bracket | M_YYYY, data = final_df_post_sc)
+m1 <- feols(norm_ind ~ Income_Bracket + M_YYYY, data = final_df_pre_sc)
+m2 <- feols(norm_ind ~ Income_Bracket + M_YYYY, data = final_df_post_sc)
 
 etable(m1, m2)
+
+
 
 ggplot(final_df_pre_sc, aes(y = norm_ind, color = Income_Bracket)) +
   geom_boxplot()
 
 ggplot(final_df_post_sc, aes(y = norm_ind, color = Income_Bracket)) +
   geom_boxplot()
+
+wald(m1)
 ```
 
 
