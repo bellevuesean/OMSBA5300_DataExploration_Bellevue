@@ -10,6 +10,7 @@ output: html_document
 library(tidyverse)
 library(readr)
 library(readxl)
+library(fixest)
 
 ```
 
@@ -77,7 +78,7 @@ Trends_mo <- Trends_mo %>%
 
 ```
 
-#Remove duplicate schname from the id_name_link data to remove duplicate school names for later merging ease
+#Remove duplicate schname from the id_name_link data to remove duplicate school names for later merging ease. Createing merge column with the scorecard
 
 ```{r}
 
@@ -85,4 +86,79 @@ unique_schname <- id_name_link %>%
   group_by(schname) %>% 
   filter(n() == 1)
 
+unique_schname <- unique_schname %>% 
+  mutate(merge_col = paste0(unitid, sep = ':', opeid))
+
+Scorecard <- Scorecard %>% 
+  mutate(merge_col = paste0(UNITID, sep = ':', OPEID))
+
 ```
+
+#Merging Scorecard and unique schname to get schname for later merging with the tends and paring down to variables of interest. Then filtering for schools that grant predominantly bachelor's and with median income after 10 year income listed.
+```{r}
+
+score_schname <- merge(Scorecard, unique_schname, by = "merge_col", all = TRUE)
+
+#Predominant bachlors = PREDDG == 3
+score_schname_red <- score_schname %>% 
+  select(126,5,122,11) %>% 
+  filter(PREDDEG == 3) %>% 
+  filter(`md_earn_wne_p10-REPORTED-EARNINGS` != 'NULL' & `md_earn_wne_p10-REPORTED-EARNINGS` != 'PrivacySuppressed')
+
+score_schname_red$md_income <- as.numeric(score_schname_red$`md_earn_wne_p10-REPORTED-EARNINGS`)
+
+
+
+```
+
+#Per the data dictionary for the scorecard income is grouped by less than 35000 and above 75000 then between those two values.
+```{r}
+score_schname_red <- score_schname_red %>% 
+  mutate(Income_Bracket = case_when(md_income < 35000 ~ 'Low',
+                                    md_income > 75000 ~ 'High',
+                                    TRUE ~ 'Mid')) %>% 
+  select(1,2,5,6)
+```
+
+
+#merge the trend data and school scorecard filtered data. This produces many NA values where the schools have been filtered out of the scorecard. Removing those values to produce the final dataframe for analysis.
+```{r}
+
+final_merge <- merge(Trends_mo, score_schname_red, by.x = "schname", by.y = "schname", all.x = TRUE)
+
+final_df <- final_merge %>% 
+  na.omit()
+
+final_df$M_YYYY <- as.Date(paste0(substr(final_df$M_YYYY,1,2), sep = '/', '01', sep = '/', substr(final_df$M_YYYY,4,7)), format = '%m/%d/%Y')
+
+final_df <- final_df %>% 
+  mutate(norm_ind = (Ind_sum - mean(Ind_sum))/sd(Ind_sum))
+
+```
+
+#Sperating out pre-scorecard dates and post-scorecard dates to compare the changes in index values between them.
+```{r}
+
+final_df_pre_sc <- final_df %>% 
+  filter(M_YYYY < '2015-09-01')
+
+final_df_post_sc <- final_df %>% 
+  filter(M_YYYY > '2015-09-01')
+
+
+```
+
+```{r}
+m1 <- feols(norm_ind ~ Income_Bracket | M_YYYY, data = final_df_pre_sc)
+m2 <- feols(norm_ind ~ Income_Bracket | M_YYYY, data = final_df_post_sc)
+
+etable(m1, m2)
+
+ggplot(final_df_pre_sc, aes(y = norm_ind, color = Income_Bracket)) +
+  geom_boxplot()
+
+ggplot(final_df_post_sc, aes(y = norm_ind, color = Income_Bracket)) +
+  geom_boxplot()
+```
+
+
