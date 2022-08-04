@@ -1,4 +1,11 @@
 ---
+title: "Untitled"
+author: "Sean Bellevue"
+date: "8/4/2022"
+output: html_document
+---
+
+---
 title: "Data Exploration Project"
 author: "Sean Bellevue"
 date: "8/3/2022"
@@ -164,30 +171,18 @@ final_df_post_sc <- final_df %>%
 ```
 
 ```{r}
-m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
-m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
+# m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
+# m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
 m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket*Timing, data = final_df)
 
-etable(m1, m2)
+# etable(m1, m2)
 etable(m3)
 
 
 ggplot(final_df, aes(y = norm_ind, x = Income_Bracket, color = Timing)) +
   geom_boxplot()
 
-ggplot(final_df_post_sc, aes(y = norm_ind, color = Income_Bracket)) +
-  geom_boxplot()
-
-wald(m1, c("High", "Low"))
-wald(m2, c("High", "Low"))
-```
-
-
-
-
-```{r}
-
-
-
 
 ```
+
+
