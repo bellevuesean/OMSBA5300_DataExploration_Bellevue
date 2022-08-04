@@ -1,18 +1,12 @@
 ---
-title: "Untitled"
-author: "Sean Bellevue"
-date: "8/4/2022"
-output: html_document
----
-
----
 title: "Data Exploration Project"
 author: "Sean Bellevue"
 date: "8/3/2022"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r message=FALSE, warning=FALSE}
+
 
 library(tidyverse)
 library(readr)
@@ -23,22 +17,22 @@ library(plotly)
 ```
 
 #Pull the data 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r message=FALSE, warning=FALSE}
 
-id_name_link <- read_csv("Rawdata/id_name_link.csv")
-Scorecard <- read_csv("Rawdata/Most+Recent+Cohorts+(Scorecard+Elements).csv")
-trends_1 <- read_csv("Rawdata/trends_up_to_finish.csv")
-trends_2 <- read_csv("Rawdata/trends_up_to_inter_1.csv")
-trends_3 <- read_csv("Rawdata/trends_up_to_inter_2.csv")
-trends_4 <- read_csv("Rawdata/trends_up_to_inter_3.csv")
-trends_5 <- read_csv("Rawdata/trends_up_to_inter_4.csv")
-trends_6 <- read_csv("Rawdata/trends_up_to_inter_5.csv")
-trends_7 <- read_csv("Rawdata/trends_up_to_inter_6.csv")
-trends_8 <- read_csv("Rawdata/trends_up_to_UM.csv")
-trends_9 <- read_csv("Rawdata/trends_up_to_UPhoenix.csv")
-trends_10 <- read_csv("Rawdata/trends_up_to_UT.csv")
-trends_11 <- read_csv("Rawdata/trends_up_to_UTMB.csv")
-trends_12 <- read_csv("Rawdata/trends_up_to_Yorktowne.csv")
+id_name_link <- read_csv("../Rawdata/id_name_link.csv")
+Scorecard <- read_csv("../Rawdata/Most+Recent+Cohorts+(Scorecard+Elements).csv")
+trends_1 <- read_csv("../Rawdata/trends_up_to_finish.csv")
+trends_2 <- read_csv("../Rawdata/trends_up_to_inter_1.csv")
+trends_3 <- read_csv("../Rawdata/trends_up_to_inter_2.csv")
+trends_4 <- read_csv("../Rawdata/trends_up_to_inter_3.csv")
+trends_5 <- read_csv("../Rawdata/trends_up_to_inter_4.csv")
+trends_6 <- read_csv("../Rawdata/trends_up_to_inter_5.csv")
+trends_7 <- read_csv("../Rawdata/trends_up_to_inter_6.csv")
+trends_8 <- read_csv("../Rawdata/trends_up_to_UM.csv")
+trends_9 <- read_csv("../Rawdata/trends_up_to_UPhoenix.csv")
+trends_10 <- read_csv("../Rawdata/trends_up_to_UT.csv")
+trends_11 <- read_csv("../Rawdata/trends_up_to_UTMB.csv")
+trends_12 <- read_csv("../Rawdata/trends_up_to_Yorktowne.csv")
 
 ```
 
@@ -70,7 +64,7 @@ Trends <- Trends %>%
 summary(Trends)
 ```
 
-#Take the Monthorweek column and separate it into year, month , day - year2, month2, day2 columns. Then convert to M-YY for the starting date to better summarise the data to one month per college (schname) by sum of index [assuming that index is a snapshot value and not a trend so summing the values will still provide the same comparison of increase or decreased interest between time periods].
+#Take the Monthorweek column and separate it into year and month columns. Then convert to M-YY for the starting date to better summarise the data to one month per college (schname) by sum of index [assuming that index is a snapshot value and not a trend so summing the values will still provide the same comparison of increase or decreased interest between time periods].
 
 ```{r}
 
@@ -130,6 +124,7 @@ score_schname_red <- score_schname_red %>%
 
 
 #merge the trend data and school scorecard filtered data. This produces many NA values where the schools have been filtered out of the scorecard. Removing those values to produce the final dataframe for analysis.
+#Creating dummy variables for income bracket and pre or post scorecard
 ```{r}
 
 final_merge <- merge(Trends_mo, score_schname_red, by.x = "schname", by.y = "schname", all.x = TRUE)
@@ -170,6 +165,7 @@ final_df_post_sc <- final_df %>%
 
 ```
 
+#The regression
 ```{r}
 # m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
 # m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
@@ -178,11 +174,34 @@ m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket*Timing, data = final_df)
 # etable(m1, m2)
 etable(m3)
 
+```
 
-ggplot(final_df, aes(y = norm_ind, x = Income_Bracket, color = Timing)) +
+
+```
+
+Analysis Results:
+
+Looking at the normalized sum of monthly index changes in search activity for keywords related to colleges that predominantly grant bachelor's degrees, the release of the Scorecard did not meaningfully shift interest to high-earnings colleges relative to low-earnings colleges.
+
+When comparing the coefficients in normalized index values over time, in general the high-income colleges average about 0.25 higher than low-income colleges. When comparing the time periods before and after the Scorecard release the interaction term between low-income and pre-scorecard is not only meaningfully insignificant but statistically insignificant as well.
+
+
+
+A high-earnings college was defined as any school where the median income 10-years after graduation was over $75,000 as defined by the Scorecards data dictionary definition of high income while low-earnings was classified as under $35,000.
+
+```
+
+#A boxplot to compare values for each income bracket by pre or post scorecard release
+```{r message=FALSE, warning=FALSE}
+
+ggplot(final_df %>% filter(Income_Bracket != 'Mid'), aes(y = norm_ind, x = Income_Bracket, color = Timing)) +
   geom_boxplot()
 
 
 ```
 
+```
 
+When comparing the differences in normalized monthly index value changes by graduate income brackets we can see that overall there were more positve changes since the Scorecard was released but the relative change between high and low income brackets before and after the Scorecard was released is nearly zero
+
+```
