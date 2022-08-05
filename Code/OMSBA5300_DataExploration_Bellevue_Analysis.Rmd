@@ -25,18 +25,33 @@ final_df <- read_csv("../PreparedData/prepared_data.csv")
 
 #The regression
 ```{r}
-# m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
-# m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
-m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket + Timing + Income_Bracket*Timing, data = final_df)
 
-# etable(m1, m2)
-etable(m3)
+m1 <- feols(norm_ind ~ Income_Bracket + Timing + Income_Bracket*Timing, data = final_df %>% filter(Income_Bracket != 'Mid'))
 
+etable(m1)
 
+```
+
+```{r}
+
+# m2 <- feols(norm_ind ~ Current_Treatment | Income_Bracket + Timing, data = final_df %>% filter(Income_Bracket != 'Mid') %>% mutate(Current_Treatment = Income_Bracket == 'High' & Timing == 'Post'))
 # 
-# m4 <- feols(index ~ M_YYYY + Income_Bracket + Timing + Income_Bracket*Timing, data = final_df %>%  filter(Income_Bracket != 'Mid') %>% group_by(M_YYYY, Income_Bracket, Timing) %>% summarise(index = mean(norm_ind)))
+# etable(m2)
+
+```
+
+```{r}
+# did <- final_df %>% 
+#   filter(Income_Bracket != 'Mid') %>% 
+#   group_by(Income_Bracket, Timing) %>% 
+#   summarise(mean = mean(norm_ind))
 # 
-# etable(m4)
+# 
+# did_effect <- (did$mean[did$Income_Bracket == 'High' & did$Timing == 'Post'] - did$mean[did$Income_Bracket == 'High' & did$Timing == 'Pre']) - (did$mean[did$Income_Bracket == 'Low' & did$Timing == 'Post'] - did$mean[did$Income_Bracket == 'Low' & did$Timing == 'Pre'])
+# 
+# print('difference in difference effect')
+# round(did_effect, 4)
+
 ```
 
 
@@ -44,11 +59,16 @@ etable(m3)
 
 Analysis Results:
 
-Looking at the normalized sum of monthly index changes in search activity for keywords related to colleges that predominantly grant bachelor's degrees, the release of the Scorecard did not meaningfully shift interest to high-earnings colleges relative to low-earnings colleges.
+Looking at the normalized sum of monthly index changes in search activity for keywords related to colleges that predominantly grant bachelor's degrees, the release of the Scorecard did not significantly shift interest from colleges where graduates earn lower incomes to colleges where graduates earn higher incomes.
 
-When comparing the coefficients in normalized index values over time, in general the high-income colleges average about 0.25 higher than low-income colleges. When comparing the time periods before and after the Scorecard release the interaction term between low-income and pre-scorecard is not only meaningfully insignificant but statistically insignificant as well.
 
-By creating a regression model that uses the interaction term between income bracket and timing compared to the Scorecard we can look at how the combinations of those categories compare to high income. There are dummy variables created as well but using the two columns for income and timing compared to the 5 variables required for including each dummy would have made the regression model itself and the results table harder to read through. 
+When comparing the coefficients in normalized index values, in general the high-income colleges average about 0.25 higher than low-income colleges and using the fixed effect of Income_Bracket and Timing we can see a small change of a 0.0022 decrease in interest for low-income colleges after the Scorecard was released compared to high-income colleges. That small difference between colleges before and after the Scorecard was released is not significant.
+
+
+By creating a regression model (m1) that uses the interaction term between income bracket and timing compared to the Scorecard we can look at how the combinations of those categories contribute in any changes to the interest in schools before and after the Scorecard release and the level of earnings graduates. We cannot sets up a difference in difference analysis because we do not have a control group that did not receive the treatment, all colleges were impacted by the release of the Scorecard in September of 2015.
+
+
+There are dummy variables created as well but using the two columns for income and timing compared to the 4 variables required for including each dummy would have made the regression model itself and the results table harder to read through. 
 
 
 A high-earnings college was defined as any school where the median income 10-years after graduation was over $75,000 as defined by the Scorecards data dictionary definition of high income while low-earnings was classified as under $35,000.
@@ -74,7 +94,7 @@ When comparing the differences in normalized monthly index value changes by grad
 
 Scatterplot:
 
-Looking at the regression lines for high and low income brackets over time we can see there was a sharp decline in the normalized sum of monthly index value by school when the Scorecard was released but the decline for both high and low income brackets is about equal. We cannot clearly see an increase in activity for schools with high incomes post graduation relative to schools with lower incomes post graduation. 
+Looking at the regression lines for high and low income brackets over time we can see there was a sharp decline in the normalized sum of monthly index value by school when the Scorecard was released but the decline for both high and low income brackets is about equal. The difference in before and after is not meaningfully significant in activity for schools with high incomes post graduation relative to schools with lower incomes post graduation. 
 
 
 ```
