@@ -11,8 +11,7 @@ output: html_document
 library(tidyverse)
 library(readr)
 library(readxl)
-library(fixest)
-library(plotly)
+
 
 ```
 
@@ -164,44 +163,9 @@ final_df_post_sc <- final_df %>%
 
 
 ```
+#create a file for the final data set for analysis
 
-#The regression
 ```{r}
-# m1 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_pre_sc)
-# m2 <- feols(norm_ind ~ High + Low + M_YYYY, data = final_df_post_sc)
-m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket*Timing, data = final_df)
-
-# etable(m1, m2)
-etable(m3)
-
-```
-
-
-```
-
-Analysis Results:
-
-Looking at the normalized sum of monthly index changes in search activity for keywords related to colleges that predominantly grant bachelor's degrees, the release of the Scorecard did not meaningfully shift interest to high-earnings colleges relative to low-earnings colleges.
-
-When comparing the coefficients in normalized index values over time, in general the high-income colleges average about 0.25 higher than low-income colleges. When comparing the time periods before and after the Scorecard release the interaction term between low-income and pre-scorecard is not only meaningfully insignificant but statistically insignificant as well.
-
-
-
-A high-earnings college was defined as any school where the median income 10-years after graduation was over $75,000 as defined by the Scorecards data dictionary definition of high income while low-earnings was classified as under $35,000.
-
-```
-
-#A boxplot to compare values for each income bracket by pre or post scorecard release
-```{r message=FALSE, warning=FALSE}
-
-ggplot(final_df %>% filter(Income_Bracket != 'Mid'), aes(y = norm_ind, x = Income_Bracket, color = Timing)) +
-  geom_boxplot()
-
-
-```
-
-```
-
-When comparing the differences in normalized monthly index value changes by graduate income brackets we can see that overall there were more positve changes since the Scorecard was released but the relative change between high and low income brackets before and after the Scorecard was released is nearly zero
+write_csv(final_df, file = 'prepared_data.csv')
 
 ```
