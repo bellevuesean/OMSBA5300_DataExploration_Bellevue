@@ -32,6 +32,11 @@ m3 <- feols(norm_ind ~ M_YYYY + Income_Bracket + Timing + Income_Bracket*Timing,
 # etable(m1, m2)
 etable(m3)
 
+
+# 
+# m4 <- feols(index ~ M_YYYY + Income_Bracket + Timing + Income_Bracket*Timing, data = final_df %>%  filter(Income_Bracket != 'Mid') %>% group_by(M_YYYY, Income_Bracket, Timing) %>% summarise(index = mean(norm_ind)))
+# 
+# etable(m4)
 ```
 
 
@@ -57,10 +62,19 @@ ggplot(final_df %>% filter(Income_Bracket != 'Mid'), aes(y = norm_ind, x = Incom
   geom_boxplot()
 
 
-```
+ggplot(final_df %>% filter(Income_Bracket != 'Mid'), aes(y = norm_ind, x = M_YYYY, color = Income_Bracket, shape = Timing)) +
+  geom_smooth(method = 'lm')
 
 ```
 
-When comparing the differences in normalized monthly index value changes by graduate income brackets we can see that overall there were more positve changes since the Scorecard was released but the relative change between high and low income brackets before and after the Scorecard was released is nearly zero
+```
+Boxplots: 
+
+When comparing the differences in normalized monthly index value changes by graduate income brackets we can see that overall there were more negative changes since the Scorecard was released but the relative change between high and low income brackets before and after the Scorecard was released is nearly zero
+
+Scatterplot:
+
+Looking at the regression lines for high and low income brackets over time we can see there was a sharp decline in the normalized sum of monthly index value by school when the Scorecard was released but the decline for both high and low income brackets is about equal. We cannot clearly see an increase in activity for schools with high incomes post graduation relative to schools with lower incomes post graduation. 
+
 
 ```
